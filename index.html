@@ -20,7 +20,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
-            width: 400px;
+            width: 500px;
             display: flex;
             flex-direction: column;
         }
@@ -49,6 +49,10 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            resize: none; /* Prevent resizing */
+            min-height: 50px; /* Minimum height */
+            max-height: 150px; /* Maximum height */
+            overflow-y: auto; /* Enable vertical scroll if needed */
         }
         #sendButton {
             padding: 8px 20px;
@@ -73,7 +77,7 @@
             <!-- Message history will be displayed here -->
         </div>
         <div class="input-container">
-            <input type="text" id="userInput" placeholder="Type your message here">
+            <textarea id="userInput" placeholder="Type your message here"></textarea>
             <button id="sendButton">Send</button>
         </div>
         <div id="response"></div>
@@ -122,10 +126,16 @@
 
         document.getElementById("sendButton").addEventListener("click", sendMessage);
 
+        // Allow sending message when Enter key is pressed
+        document.getElementById("userInput").addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) { // Send message if Enter is pressed without Shift key
+                event.preventDefault(); // Prevent new line in textarea
+                sendMessage();
+            }
+        });
+
         // Example: Display previous messages (replace with actual message history logic)
         displayMessage("assistant", "Hello, how can I assist you today?");
-        displayMessage("user", "Can you tell me about your services?");
-        displayMessage("assistant", "Sure, we provide a range of services including...");
     </script>
 </body>
 </html>
