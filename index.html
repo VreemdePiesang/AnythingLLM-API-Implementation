@@ -90,7 +90,7 @@
         function sendMessage() {
             var userInput = document.getElementById("userInput").value;
             displayMessage("user", userInput); // Display user message in chat history
-            fetch('http://localhost:1234/v1/chat/completions', {
+            fetch('http://localhost:80/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
