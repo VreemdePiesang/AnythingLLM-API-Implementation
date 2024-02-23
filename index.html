@@ -44,29 +44,27 @@
         .input-container {
             display: flex;
             margin-top: 10px;
-            border-radius: 20px; /* Rounded corners */
-            overflow: hidden;
         }
         #userInput {
             flex: 1;
-            padding: 12px; /* Added padding */
-            border: none;
+            padding: 8px;
+            border: 1px solid #555;
+            border-radius: 20px; /* Rounded corners */
             resize: none; /* Prevent resizing */
             min-height: 50px; /* Minimum height */
             max-height: 150px; /* Maximum height */
             overflow-y: auto; /* Enable vertical scroll if needed */
             background-color: #222;
             color: #fff;
-            outline: none; /* Remove the focus outline */
         }
         #sendButton {
-            padding: 12px 20px; /* Added padding */
+            padding: 8px 20px;
             border: none;
+            border-radius: 20px; /* Rounded corners */
             background-color: #007bff;
             color: #fff;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            border-radius: 20px; /* Rounded corners */
         }
         #sendButton:hover {
             background-color: #0056b3;
@@ -82,9 +80,7 @@
             <!-- Message history will be displayed here -->
         </div>
         <div class="input-container">
-            <div style="flex: 1;">
-                <textarea id="userInput" placeholder="Type your message here"></textarea>
-            </div>
+            <textarea id="userInput" placeholder="Type your message here"></textarea>
             <button id="sendButton">Send</button>
         </div>
         <div id="response"></div>
