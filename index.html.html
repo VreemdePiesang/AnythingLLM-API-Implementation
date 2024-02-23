@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-history {
+            border-right: 1px solid #ddd;
+            padding-right: 10px;
+            margin-right: 10px;
+            overflow-y: auto;
+            max-height: 300px; /* Adjust as needed */
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message.user {
+            color: #007bff;
+        }
+        .message.assistant {
+            color: #28a745;
+        }
+        .input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+        #userInput {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #sendButton {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-history" id="chatHistory">
+            <!-- Message history will be displayed here -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Type your message here">
+            <button id="sendButton">Send</button>
+        </div>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var userInput = document.getElementById("userInput").value;
+            displayMessage("user", userInput); // Display user message in chat history
+            fetch('http://localhost:1234/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    messages: [ 
+                        { role: "user", content: userInput }
+                    ], 
+                    temperature: 0.7, 
+                    max_tokens: -1,
+                    stream: false
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from your API
+                // For demonstration, I'm just logging the response
+                console.log(data);
+                // Display the response in the UI
+                displayMessage("assistant", data.choices[0].message.content);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+            document.getElementById("userInput").value = ""; // Clear input after sending
+        }
+
+        function displayMessage(role, content) {
+            var chatHistory = document.getElementById("chatHistory");
+            var messageElement = document.createElement("div");
+            messageElement.classList.add("message", role);
+            messageElement.innerText = content;
+            chatHistory.appendChild(messageElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+        }
+
+        document.getElementById("sendButton").addEventListener("click", sendMessage);
+
+        // Example: Display previous messages (replace with actual message history logic)
+        displayMessage("assistant", "Hello, how can I assist you today?");
+        displayMessage("user", "Can you tell me about your services?");
+        displayMessage("assistant", "Sure, we provide a range of services including...");
+    </script>
+	
+</body>
+</html>
