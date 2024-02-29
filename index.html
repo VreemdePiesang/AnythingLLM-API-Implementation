@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Interface</title>
     <style>
-        body {
+         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -38,7 +38,7 @@
         .message.user {
             color: #007bff;
         }
-        .message.assistant {
+        .message.Larry {
             color: #28a745;
         }
         .input-container {
@@ -77,7 +77,7 @@
 <body>
     <div class="container">
         <div class="chat-history" id="chatHistory">
-            <!-- Message history will be displayed here -->
+            <!-- Chat history will be displayed here -->
         </div>
         <div class="input-container">
             <textarea id="userInput" placeholder="Type your message here"></textarea>
@@ -87,42 +87,67 @@
     </div>
 
     <script>
+        // Initialize conversation history
+        let conversationHistory = [];
+        // Initialize memory object
+        let memory = {};
+
         function sendMessage() {
             var userInput = document.getElementById("userInput").value;
             displayMessage("user", userInput); // Display user message in chat history
-            fetch('http://192.168.3.72:200/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    messages: [ 
-                        { role: "user", content: userInput }
-                    ], 
-                    temperature: 0.7, 
-                    max_tokens: -1,
-                    stream: false
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Handle the response from your API
-                // For demonstration, I'm just logging the response
-                console.log(data);
-                // Display the response in the UI
-                displayMessage("assistant", data.choices[0].message.content);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+
+            // Add user message to conversation history
+            conversationHistory.push({ role: "user", content: userInput });
+            conversationHistory.push({ role: "system", content: "Meet Larry, the witty system administrator from MPU. MPU is the love child of Mr Francios. Living in the server basement, he's fueled by Red Bull and Tetris, cracking IT jokes while pondering the digital universe. Larry's a fan of detective movies, addicted to Fanta Orange, and finds solace in smoke breaks. Expect his responses to reflect his quirky personality, offering helpful insights and a touch of dry humor. Embody Larry's spirit and let his personality shine in your interactions." });
+
+            // Check for specific prompts in user input
+            if (userInput.toLowerCase().includes("eye color")) {
+                displayMessage("Larry");
+            } else {
+                fetch('http://192.168.3.72:200/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        messages: conversationHistory,
+                        temperature: 0.7, 
+                        max_tokens: -1,
+                        stream: false,
+                        memory: memory // Send memory object along with messages
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Handle the response from your API
+                    console.log(data);
+                    // Display the response in the UI
+                    displayMessage("Larry", data.choices[0].message.content);
+                    // Update memory object with any new information from AI response
+                    if (data.choices[0].message.memory) {
+                        memory = data.choices[0].message.memory;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            }
+
             document.getElementById("userInput").value = ""; // Clear input after sending
         }
 
         function displayMessage(role, content) {
             var chatHistory = document.getElementById("chatHistory");
             var messageElement = document.createElement("div");
-            messageElement.classList.add("message", role);
-            messageElement.innerText = content;
+            messageElement.classList.add("message");
+            messageElement.classList.add(role === "user" ? "user" : "Larry");
+            var roleLabel = document.createElement("span");
+            roleLabel.classList.add("role-label");
+            roleLabel.innerText = role === "user" ? "User: " : "Larry: ";
+            messageElement.appendChild(roleLabel);
+            var messageContent = document.createElement("span");
+            messageContent.innerText = content;
+            messageElement.appendChild(messageContent);
             chatHistory.appendChild(messageElement);
             chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
         }
@@ -138,7 +163,7 @@
         });
 
         // Example: Display previous messages (replace with actual message history logic)
-        displayMessage("assistant", "Hello, how can I assist you today?");
+        displayMessage("Larry", "Hello, how can I assist you today?");
     </script>
 </body>
 </html>
