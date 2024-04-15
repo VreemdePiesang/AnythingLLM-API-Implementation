@@ -1,6 +1,7 @@
 Overview:
 
 This code snippet represents a basic web-based chat interface that interacts with an AI assistant. Users can input questions or messages, and the AI assistant responds accordingly. It's designed to be integrated into a web application.
+
 Features:
     Chat Interface: Users can type questions or messages into an input field and send them to the AI assistant.
     AI Assistant Integration: The system communicates with an AI assistant through a backend API to generate responses.
@@ -10,7 +11,8 @@ Features:
     Styling: The interface is styled using CSS to provide a clean and user-friendly experience.
 
 How it Works:
-    User Input: Users type questions or messages into the input field and press "Send" or press Enter.
+    User Input:
+    Users type questions or messages into the input field and press "Send" or press Enter.
     Sending Request: When the user sends a message, a JavaScript function (sendChatRequest) is triggered.
     Disabling Inputs: The send button and input field are disabled to prevent further input while waiting for a response.
     API Request: The user's message, along with the selected printer model, is sent as a request to a specified API endpoint.
