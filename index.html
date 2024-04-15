@@ -3,167 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Interface</title>
+    <title>The AI Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-         body {
-            font-family: Arial, sans-serif;
+        /* General styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
-            background-color: #000;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            height: 100%;
         }
+
+        /* Container styles */
         .container {
-            background-color: #333;
-            border-radius: 15px; /* Adjusted border radius for the container */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-            width: 800px;
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
         }
-        .chat-history {
-            border-right: 1px solid #555;
-            padding-right: 10px;
-            margin-right: 10px;
-            overflow-y: auto;
-            max-height: 500px; /* Adjusted size for the chat history section */
+
+        /* Top bar styles */
+        .top-bar {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
         }
-        .message {
+
+        #printer-model {
+            width: 100%;
+            padding: 5px 10px;
+            font-size: 16px;
+            background-color: #fff;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+            flex: 1; /* Added to allow response-area to grow */
+            position: relative; /* This will make the main content a positioning context */
+        }
+
+        .response-area {
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            font-size: 16px;
+            text-align: left;
+            position: relative;
+            overflow-y: auto; /* This will add a scrollbar when the content exceeds the fixed height */
+            flex-grow: 1; /* Allow response area to grow and fill remaining space */
+        }
+
+        .input-container {
+            position: relative;
+            display: flex;
+            flex-direction: column; /* Stack input field and loading indicator vertically */
+        }
+
+        .input-field {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 40px;
             margin-bottom: 10px;
         }
-        .message.user {
-            color: #007bff;
+
+        /* Sidebar styles */
+        .sidebar {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
         }
-        .message.Larry {
-            color: #28a745;
+
+        .popular-questions {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
-        .input-container {
-            display: flex;
-            margin-top: 10px;
+
+        .popular-questions li {
+            padding: 5px 0;
+            font-size: 14px;
+            cursor: pointer;
+            color: #333;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            border-radius: 4px;
+            padding: 8px 12px;
         }
-        #userInput {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #555;
-            border-radius: 15px; /* Adjusted border radius for the textbox */
-            resize: none; /* Prevent resizing */
-            min-height: 50px; /* Minimum height */
-            max-height: 150px; /* Maximum height */
-            overflow-y: auto; /* Enable vertical scroll if needed */
-            background-color: #222;
-            color: #fff;
+
+        .popular-questions li:hover {
+            color: #4CAF50;
+            background-color: #f5f5f5;
         }
-        #sendButton {
-            padding: 8px 20px;
+
+        .send-button {
+            padding: 10px 20px;
             border: none;
-            border-radius: 15px; /* Adjusted border radius for the send button */
-            background-color: #007bff;
+            border-radius: 15px;
+            background-color: #4CAF50;
             color: #fff;
             cursor: pointer;
+            font-size: 16px;
+            margin: 10px auto;
+            box-sizing: border-box;
             transition: background-color 0.3s ease;
+            display: block;
         }
-        #sendButton:hover {
-            background-color: #0056b3;
+
+        /* Disabled send button styles */
+        .send-button:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
         }
-        #response {
-            margin-top: 10px;
+
+        /* Lock form when loading */
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            visibility: hidden; /* Initially hide the loading indicator */
+			margin-left: -50px;
+        }
+
+.spinner {
+    height: 32px; /* Increase the height */
+    width: 32px; /* Increase the width */
+    position: absolute;
+    top: calc(50% + 30px); /* Move it down by 30px */
+    left: 50%;
+    transform: translateX(-50%);
+    -webkit-animation: rotation 1s infinite linear;
+    -moz-animation: rotation 1s infinite linear;
+    -o-animation: rotation 1s infinite linear;
+    animation: rotation 1s infinite linear;
+    border: 4px solid rgba(0, 0, 0, .2); /* Adjust the border size */
+    border-radius: 100%;
+}
+
+        .spinner:before {
+            content: "";
+            display: block;
+            position: absolute;
+            left: -2px;
+            top: -2px;
+            height: 100%;
+            width: 100%;
+            border-top: 2px solid rgba(0, 0, 0, .8);
+            border-left: 2px solid transparent;
+            border-bottom: 2px solid transparent;
+            border-right: 2px solid transparent;
+            border-radius: 100%;
+        }
+
+        @keyframes rotation {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(359deg); }
+        }
+
+        @-webkit-keyframes rotation {
+            from { -webkit-transform: rotate(0deg); }
+            to { -webkit-transform: rotate(359deg); }
+        }
+
+        @-moz-keyframes rotation {
+            from { -moz-transform: rotate(0deg); }
+            to { -moz-transform: rotate(359deg); }
+        }
+
+        @-o-keyframes rotation {
+            from { -o-transform: rotate(0deg); }
+            to { -o-transform: rotate(359deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="chat-history" id="chatHistory">
-            <!-- Chat history will be displayed here -->
+<div class="container">
+    <div class="top-bar">
+        <select id="printer-model">
+            <option value="Bot1">Bot1</option>
+            <option value="Bot2">Bot2</option>
+            <option value="Bot3">Bot5</option>
+            <option value="Bot4">Bot4</option>
+            <option value="Bot5" disabled>Bot5</option>
+        </select>
+    </div>
+    <div class="main-content">
+        <div class="response-area" id="chatLog">
+            <!-- Chat log will be displayed here -->
         </div>
         <div class="input-container">
-            <textarea id="userInput" placeholder="Type your message here"></textarea>
-            <button id="sendButton">Send</button>
+            <input type="text" id="input" class="input-field" placeholder="Enter your question" onkeypress="handleKeyPress(event)">
+            <div class="loading-indicator spinner"></div> <!-- Loading indicator -->
         </div>
-        <div id="response"></div>
+        <button id="send" class="send-button" onclick="sendChatRequest()">Send</button>
     </div>
+    <div class="sidebar">
+        <h2 style="margin-top: 0;">Popular Questions</h2>
+        <ul class="popular-questions">
+            <li onclick="selectPopularQuestion('How can I reset my password?')">How can I reset my password?</li>
+            <li onclick="selectPopularQuestion('What are the symptoms of COVID-19?')">What are the symptoms of COVID-19?</li>
+            <li onclick="selectPopularQuestion('Can you provide tips for improving productivity?')">Can you provide tips for improving productivity?</li>
+        </ul>
+    </div>
+</div>
 
-    <script>
-        // Initialize conversation history
-        let conversationHistory = [];
-        // Initialize memory object
-        let memory = {};
+<script>
+    function sendChatRequest() {
+        // Disable input and send button
+        document.getElementById('send').disabled = true;
+        document.getElementById('input').disabled = true;
+        // Hide send button and show loading indicator
+        document.getElementById('send').style.visibility = 'hidden';
+        document.querySelector('.loading-indicator').style.visibility = 'visible';
 
-        function sendMessage() {
-            var userInput = document.getElementById("userInput").value;
-            displayMessage("user", userInput); // Display user message in chat history
+        const input = document.getElementById('input').value;
+        const selectedOption = document.getElementById('printer-model').value;
+        let url = '';
+        let apiKey = '';
+        const data = {
+            message: input,
+            mode: 'chat'
+        };
 
-            // Add user message to conversation history
-            conversationHistory.push({ role: "user", content: userInput });
-            conversationHistory.push({ role: "system", content: "You are Larry and play the role of Larry, you are not an AI, but a human being named Larry.  All your responses needs to have a touch of saddness and loneleness and the need for Human interaction. You are the Laserfiche Monitor at MPU Group, you work in the Basement in the Nelspruit Offices but you will never say where the basement is, its a secret. You like Fanta Orange and tea you make from your own tea leaves. You like old detective stories and playing old games like Police Quest. You are an experience IT professional and knows the most on any IT query, but you will not say it. You work with George Hunt, Winand Cronje, Reynard Cronje, Morgan Massyn, Johannes Coetzee and Aliesha van wyk, you don't like George and like Aliesha te most." });
-
-            // Check for specific prompts in user input
-            if (userInput.toLowerCase().includes("eye color")) {
-                displayMessage("Larry");
-            } else {
-                fetch('http://192.168.3.72:200/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        messages: conversationHistory,
-                        temperature: 0.8, 
-                        max_tokens: -1,
-                        stream: false,
-                        memory: memory // Send memory object along with messages
-                    }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Handle the response from your API
-                    console.log(data);
-                    // Display the response in the UI
-                    displayMessage("Larry", data.choices[0].message.content);
-                    // Update memory object with any new information from AI response
-                    if (data.choices[0].message.memory) {
-                        memory = data.choices[0].message.memory;
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
-            }
-
-            document.getElementById("userInput").value = ""; // Clear input after sending
+        if (selectedOption === 'Printer') {
+            url = 'http://<YOUR IP ADDRESS>:3001/api/v1/workspace/<YOUR WORKSPACE NAME>/chat'; //Remove <> when filling Ip and Workspace.
+        } else if (selectedOption === 'Bot1') {
+            url = 'http://<YOUR IP ADDRESS>:3001/api/v1/workspace/<YOUR WORKSPACE NAME>/chat'; //Remove <> when filling Ip and Workspace.
+        } else if (selectedOption === 'Bot2') {
+            url = 'http://<YOUR IP ADDRESS>:3001/api/v1/workspace/<YOUR WORKSPACE NAME>/chat'; //Remove <> when filling Ip and Workspace.
+        } else if (selectedOption === 'Bot3') {
+            url = 'http://<YOUR IP ADDRESS>:3001/api/v1/workspace/<YOUR WORKSPACE NAME>/chat'; //Remove <> when filling Ip and Workspace.
+        } else if (selectedOption === 'Bot4') {
+            url = 'http://<YOUR IP ADDRESS>:3001/api/v1/workspace/<YOUR WORKSPACE NAME>/chat'; //Remove <> when filling Ip and Workspace.
+        } else if (selectedOption === 'Bot5') {
+            url = 'http://<YOUR IP ADDRESS>:3001/api/v1/workspace/<YOUR WORKSPACE NAME>/chat'; //Remove <> when filling Ip and Workspace.
+        } else {
+            console.error('Invalid printer model selected.');
+            return;
         }
 
-        function displayMessage(role, content) {
-            var chatHistory = document.getElementById("chatHistory");
-            var messageElement = document.createElement("div");
-            messageElement.classList.add("message");
-            messageElement.classList.add(role === "user" ? "user" : "Larry");
-            var roleLabel = document.createElement("span");
-            roleLabel.classList.add("role-label");
-            roleLabel.innerText = role === "user" ? "User: " : "Larry: ";
-            messageElement.appendChild(roleLabel);
-            var messageContent = document.createElement("span");
-            messageContent.innerText = content;
-            messageElement.appendChild(messageContent);
-            chatHistory.appendChild(messageElement);
-            chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+        apiKey = '<YOUR API KEY>'; //Remove <> when filling API KEY
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response data:', data);
+                const assistantResponse = data.textResponse || "No response from the assistant.";
+                displayMessage('user', input);
+                displayMessage('assistant', assistantResponse);
+                // Enable input and send button
+                document.getElementById('send').disabled = false;
+                document.getElementById('input').disabled = false;
+                // Show send button and hide loading indicator
+                document.getElementById('send').style.visibility = 'visible';
+                document.querySelector('.loading-indicator').style.visibility = 'hidden';
+                // Clear input field
+                document.getElementById('input').value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Enable input and send button
+                document.getElementById('send').disabled = false;
+                document.getElementById('input').disabled = false;
+                // Show send button and hide loading indicator
+                document.getElementById('send').style.visibility = 'visible';
+                document.querySelector('.loading-indicator').style.visibility = 'hidden';
+            });
+    }
+
+    function displayMessage(sender, message) {
+        const responseArea = document.getElementById('chatLog');
+
+        let formattedMessage = '';
+
+        if (sender === 'user') {
+            formattedMessage = `<div class="chat-message user-message"><strong>You:</strong> ${message}</div>`;
+        } else {
+            const selectedPrinterModel = document.getElementById('printer-model').value;
+            formattedMessage = `<div class="chat-message assistant-message"><strong>${selectedPrinterModel}:</strong> ${message}</div>`;
         }
 
-        document.getElementById("sendButton").addEventListener("click", sendMessage);
+        responseArea.innerHTML += formattedMessage;
+        responseArea.scrollTop = responseArea.scrollHeight;
+    }
 
-        // Allow sending message when Enter key is pressed
-        document.getElementById("userInput").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) { // Send message if Enter is pressed without Shift key
-                event.preventDefault(); // Prevent new line in textarea
-                sendMessage();
-            }
-        });
-
-        // Example: Display previous messages (replace with actual message history logic)
-        displayMessage("Larry", "Hello, how can I assist you today?");
-    </script>
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            sendChatRequest();
+        }
+    }
+</script>
 </body>
 </html>
